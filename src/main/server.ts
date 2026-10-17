@@ -14,7 +14,7 @@ db.pragma('journal_mode = WAL');
 const app = createApp(new SqliteTaskRepository(db));
 
 const server = app.listen(port, () => {
-  console.log(`test-backend listening on http://localhost:${port}`);
+  console.log(`test-backend listening on http://localhost:${port} (API docs at /api-docs)`);
 });
 
 const shutdown = (): void => {

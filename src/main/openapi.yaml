@@ -1,0 +1,178 @@
+openapi: 3.0.3
+info:
+  title: HMCTS Task API
+  version: 0.0.1
+  description: API for caseworkers to create, view, update and delete tasks.
+servers:
+  - url: http://localhost:4000
+tags:
+  - name: Tasks
+  - name: Platform
+paths:
+  /:
+    get:
+      tags: [Platform]
+      summary: Welcome message
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema: { type: string, example: Welcome to test-backend }
+  /health:
+    get:
+      tags: [Platform]
+      summary: Health check
+      responses:
+        '200':
+          description: Service is up
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: UP }
+  /tasks:
+    get:
+      tags: [Tasks]
+      summary: Retrieve all tasks
+      description: Returns every task, ordered by due date (earliest first).
+      responses:
+        '200':
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Task' }
+    post:
+      tags: [Tasks]
+      summary: Create a task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateTaskRequest' }
+      responses:
+        '201':
+          description: Task created
+          headers:
+            Location:
+              schema: { type: string, example: /tasks/1 }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+  /tasks/{id}:
+    parameters:
+      - $ref: '#/components/parameters/TaskId'
+    get:
+      tags: [Tasks]
+      summary: Retrieve a task by ID
+      responses:
+        '200':
+          description: The task
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Tasks]
+      summary: Delete a task
+      responses:
+        '204': { description: Task deleted }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /tasks/{id}/status:
+    parameters:
+      - $ref: '#/components/parameters/TaskId'
+    patch:
+      tags: [Tasks]
+      summary: Update the status of a task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateStatusRequest' }
+      responses:
+        '200':
+          description: Updated task
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+components:
+  parameters:
+    TaskId:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+  schemas:
+    TaskStatus:
+      type: string
+      enum: [TODO, IN_PROGRESS, DONE]
+    Task:
+      type: object
+      required: [id, title, description, status, dueDateTime, createdAt, updatedAt]
+      properties:
+        id: { type: integer, example: 1 }
+        title: { type: string, example: Review case bundle }
+        description: { type: string, nullable: true, example: Check exhibits for case ABC12345 }
+        status: { $ref: '#/components/schemas/TaskStatus' }
+        dueDateTime: { type: string, format: date-time, example: '2026-11-01T09:00:00.000Z' }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    CreateTaskRequest:
+      type: object
+      additionalProperties: false
+      required: [title, dueDateTime]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 200, example: Review case bundle }
+        description: { type: string, maxLength: 2000, nullable: true, example: Check exhibits for case ABC12345 }
+        status:
+          allOf: [{ $ref: '#/components/schemas/TaskStatus' }]
+          default: TODO
+        dueDateTime:
+          type: string
+          format: date-time
+          description: ISO 8601 date-time with timezone (Z or offset)
+          example: '2026-11-01T09:00:00Z'
+    UpdateStatusRequest:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status: { $ref: '#/components/schemas/TaskStatus' }
+    Error:
+      type: object
+      properties:
+        status: { type: integer }
+        error: { type: string }
+        message: { type: string }
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field: { type: string, nullable: true }
+              message: { type: string }
+  responses:
+    BadRequest:
+      description: Validation failed or malformed request
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example:
+            status: 400
+            error: Bad Request
+            message: Validation failed
+            details: [{ field: title, message: title is required }]
+    NotFound:
+      description: Task not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { status: 404, error: HttpError, message: Task 42 not found }

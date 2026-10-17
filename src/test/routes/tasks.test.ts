@@ -17,6 +17,11 @@ describe('Task API', () => {
 
   afterEach(() => db.close());
 
+  it('serves the OpenAPI document', async () => {
+    const res = await request(app).get('/openapi.json').expect(200);
+    expect(res.body.paths).toHaveProperty('/tasks/{id}/status');
+  });
+
   describe('POST /tasks', () => {
     it('creates a task and returns 201 with a Location header', async () => {
       const res = await request(app).post('/tasks').send(newTask).expect(201);

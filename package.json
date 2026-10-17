@@ -3,9 +3,9 @@
   "version": "0.0.1",
   "description": "HMCTS DTS developer challenge - task management API (Node/Express)",
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && cp src/main/openapi.yaml dist/main/",
     "start": "node dist/main/server.js",
-    "start:dev": "nodemon --watch src/main --ext ts --exec ts-node src/main/server.ts",
+    "start:dev": "nodemon --watch src/main --ext ts,yaml --exec ts-node src/main/server.ts",
     "lint": "eslint . && prettier --check .",
     "lint:fix": "prettier --write . && eslint --fix .",
     "test": "jest",
@@ -19,6 +19,8 @@
     "better-sqlite3": "^13.0.3",
     "express": "^5.3.0",
     "helmet": "^8.3.0",
+    "swagger-ui-express": "^5.0.1",
+    "yaml": "^2.9.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -28,6 +30,7 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^26.6.5",
     "@types/supertest": "^7.2.1",
+    "@types/swagger-ui-express": "^4.1.8",
     "eslint": "^10.13.0",
     "eslint-config-prettier": "^10.1.8",
     "jest": "^30.5.2",
