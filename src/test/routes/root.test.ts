@@ -1,8 +1,19 @@
+import Database from 'better-sqlite3';
 import request from 'supertest';
+import { Express } from 'express';
 import { createApp } from '../../main/app';
+import { SqliteTaskRepository } from '../../main/repositories/TaskRepository';
 
 describe('Root routes', () => {
-  const app = createApp();
+  let db: Database.Database;
+  let app: Express;
+
+  beforeEach(() => {
+    db = new Database(':memory:');
+    app = createApp(new SqliteTaskRepository(db));
+  });
+
+  afterEach(() => db.close());
 
   it('GET / returns the welcome message', async () => {
     const res = await request(app).get('/').expect(200);
